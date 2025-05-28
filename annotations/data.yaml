@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['vehicle']
+
+roboflow:
+  workspace: 131-jkp76
+  project: my-first-project-dmq1k
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/131-jkp76/my-first-project-dmq1k/dataset/1

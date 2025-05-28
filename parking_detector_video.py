@@ -9,7 +9,7 @@ import json
 class ParkingSpotDetector:
     def __init__(self, input_path=None, spots_path='spots.json', overlap_thresh=0.1, model_size='n', conf_thresh=0.05):
         # Initialize YOLO model
-        model_path = f'yolov8{model_size}.pt'
+        model_path = 'runs/train/yolov8-parking-finetune/weights/best.pt'   #f'yolov8{model_size}.pt'
         self.model = YOLO(model_path)
         self.conf_thresh = conf_thresh
         
@@ -82,19 +82,26 @@ class ParkingSpotDetector:
         return False
 
     def process_frame(self, frame):
-        # Hardcoded taken spots (indices provided by user)
-        free_indices = {7, 27, 34, 42, 39, 38, 53, 55, 57, 69, 62, 61}
+        results = self.model(frame)
+        all_detections = []
+        for r in results:
+            for box, conf in zip(r.boxes.xyxy.cpu().numpy(), r.boxes.conf.cpu().numpy()):
+                if conf > self.conf_thresh:
+                    all_detections.append(box)
+        # Draw all YOLO detections in blue for debugging
+        for box in all_detections:
+            x1, y1, x2, y2 = map(int, box)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 1)  # Blue for detections
         occupied_count = 0
         for idx, spot in enumerate(self.parking_spots):
-            is_free = (idx + 1) in free_indices
-            if not is_free:
+            is_occupied = self.check_spot_occupancy(all_detections, spot)
+            if is_occupied:
                 occupied_count += 1
                 color = self.colors['occupied']  # Red for occupied
             else:
                 color = self.colors['vacant']    # Green for vacant
             cv2.rectangle(frame, (spot[0], spot[1]), (spot[2], spot[3]), color, 2)
-            # Draw spot number
-            #cv2.putText(frame, str(idx + 1), (spot[0], spot[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+            cv2.putText(frame, str(idx + 1), (spot[0], spot[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
         self.occupied_spots = occupied_count
         available_count = self.total_spots - occupied_count
         counter_text = f"Taken: {occupied_count} / Available: {available_count}"
