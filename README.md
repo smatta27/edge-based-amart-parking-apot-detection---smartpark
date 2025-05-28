@@ -1,64 +1,92 @@
 # Smart Parking Spot Detector
 
-A parking spot detection system using YOLOv8 for car detection and OpenCV for image/video processing.
+A parking spot detection system using YOLOv8 for car detection and OpenCV for image/video processing. This project supports both static image and video parking lot analysis, and can be fine-tuned for custom aerial views.
 
 ## Features
 
-- Car detection using YOLOv8
-- Parking spot selection via a GUI tool
-- Occupancy status display for each spot (currently using fixed values for demonstration)
+- Car detection using YOLOv8 (pre-trained or fine-tuned)
+- Manual parking spot selection via a GUI tool
+- Occupancy status display for each spot (red = occupied, green = vacant)
 - Counter of occupied/vacant spots
 - Support for both image and video files
 - Automatic saving of processed results
+- Fine-tuning pipeline for custom datasets
 
 ## Workflow
 
 ### 1. Select Parking Spots
-First, you need to define the parking spots on your image or video frame:
+First, define the parking spots on your image or a frame from your video:
 ```bash
 python select_parking_spots.py path/to/image.jpg --output spots.json
 ```
-This will open a GUI where you can draw rectangles for each parking spot. The coordinates will be saved to `spots.json`.
+This opens a GUI to draw rectangles for each parking spot. The coordinates are saved to `spots.json` (or `spots_video.json` for video).
 
-TEAM: DONT WORRY ABOUT THIS, IVE ALREADY DONE IT (Check the spots.json files)
+### 2. (Optional) Extract Frames for Annotation
+To fine-tune YOLOv8 for your specific video, extract frames:
+```bash
+python frame.py carPark.mp4 --output_dir frames --interval 30
+```
+This saves every 30th frame to the `frames/` directory.
 
-### 2. Run the Detector
-#### For Images:
+### 3. Annotate Frames
+Label all cars in the extracted frames using a tool like [LabelImg](https://github.com/tzutalin/labelImg) or [Roboflow](https://roboflow.com/). Export annotations in YOLOv8 txt format.
+
+### 4. Organize Dataset
+Structure your dataset as follows:
+```
+annotations/
+  train/
+    images/
+    labels/
+  valid/
+    images/
+    labels/
+  data.yaml
+```
+
+### 5. Fine-tune YOLOv8
+Train a YOLOv8 model on your custom dataset:
+```bash
+python train_yolov8.py
+```
+- Adjust model size, epochs, and image size in `train_yolov8.py` as needed.
+- The best weights will be saved in `runs/train/yolov8-parking-finetune/weights/best.pt`.
+
+### 6. Run the Detector
+#### For Images (hardcoded or detection-based):
 ```bash
 python parking_detector.py path/to/image.jpg --spots spots.json
 ```
-- The script will display the image with each parking spot outlined and numbered.
-- Spots are shown as red (occupied) or green (vacant) based on a fixed set of values for demonstration.
+- Shows the image with each parking spot outlined and numbered.
+- Spots are colored red (occupied) or green (vacant).
 - The processed image is saved with a `_processed` suffix.
 
-TEAM: RUN 'python3 parking_detector.py carPark.jpg --spots spots.json'
-
-#### For Videos:
+#### For Videos (detection-based, supports fine-tuned weights):
 ```bash
-python parking_detector_video.py path/to/video.mp4 --spots spots.json
+python parking_detector_video.py path/to/video.mp4 --spots spots_video.json --model runs/train/yolov8-parking-finetune/weights/best.pt --conf 0.01
 ```
-- The script will display the video with each parking spot outlined and numbered.
-- Spots are shown as red (occupied) or green (vacant) based on a fixed set of values for demonstration.
+- Shows the video with each parking spot outlined and numbered.
+- Spots are colored red (occupied) or green (vacant) in real time as cars move.
 - The processed video is saved with a `_processed` suffix.
 
-TEAM: RUN 'python3 parking_detector_video.py carPark.mp4 --spots spots_video.json'
-
 ## How It Works
-- Parking spot locations are defined manually using the GUI tool and saved to a JSON file.
-- When running the detector, the script uses a predefined set of spot statuses to display which spots are occupied or vacant. This is useful for demonstration and testing.
-- The spot numbers are shown on the image/video so you can easily identify and update which spots are free or taken.
+- Parking spot locations are defined manually and saved to a JSON file.
+- For images, you can use a fixed set of spot statuses for demonstration, or use detection.
+- For videos, YOLOv8 detects cars in each frame; spots are marked occupied if a car overlaps the spot.
+- Fine-tuning on your own frames greatly improves detection accuracy for your specific scene.
 
 ## Limitations & Next Steps
-- **Current Limitation:** The video detector currently uses fixed spot statuses, so it does not adapt if vehicles leave or enter spots during the video. This means the occupancy display will not update dynamically as cars move.
-- **Future Work:** To make the video detector fully adaptive, the detection logic should be improved so that the script can automatically update spot statuses in real time as vehicles arrive or depart. This will require more robust object detection and overlap analysis.
+- **Pre-trained YOLOv8 may not work well on aerial parking lot views.**
+- **Fine-tuning on your own frames is highly recommended for best results.**
+- Future work: Add support for more robust detection, multi-class support, and automatic spot assignment.
 
 ## Notes
 - Supported image formats: .jpg, .png, etc.
 - Supported video formats: .mp4, .avi, .mov
-- For demonstration, the occupancy status is set based on a fixed list of spot indices. You can update these indices in the code as needed.
+- For demonstration, the occupancy status can be set based on a fixed list of spot indices (hardcoded) or dynamically via detection.
+- See `train_yolov8.py` for training details and adjust as needed for your dataset.
 
 ## Setup
 
 1. Install the required dependencies:
 pip install -r requirements.txt
-```
