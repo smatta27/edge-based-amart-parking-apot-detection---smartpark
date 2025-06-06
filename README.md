@@ -1,6 +1,8 @@
 # Smart Parking Spot Detector
 
-A parking spot detection system using YOLOv8 for car detection and OpenCV for image/video processing. This project supports both static image and video parking lot analysis, and can be fine-tuned for custom aerial views.
+A smart parking spot detector is useful in cities and crowded areas where finding parking is often a challenge. This system uses computer vision to automatically detect which parking spots are taken and which are open. It helps drivers save time by quickly identifying available spaces, which also reduces traffic caused by people circling around to find parking. Businesses, malls, airports, and schools can use this to manage their lots more efficiently and improve the overall experience for visitors.
+
+The project works well with camera footage from above, like drone or rooftop cameras. By using YOLOv8 for detecting cars and OpenCV to process video or images, the system can track parking activity in real time. The manual spot selection tool allows users to define custom parking layouts, so the system can be used in many different environments without needing to install new hardware.
 
 ## Features
 
