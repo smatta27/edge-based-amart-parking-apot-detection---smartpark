@@ -6,6 +6,7 @@ The project works well with camera footage from above, like drone or rooftop cam
 
 ## Features
 
+
 - Car detection using YOLOv8 (pre-trained or fine-tuned)
 - Manual parking spot selection via a GUI tool
 - Occupancy status display for each spot (red = occupied, green = vacant)
