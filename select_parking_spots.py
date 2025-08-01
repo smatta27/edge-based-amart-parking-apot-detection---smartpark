@@ -4,6 +4,7 @@ import argparse
 
 spots = []
 drawing = False
+
 ix, iy = -1, -1
 
 
