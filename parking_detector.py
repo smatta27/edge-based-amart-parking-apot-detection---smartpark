@@ -15,6 +15,7 @@ class ParkingSpotDetector:
         
         # Initialize input source
         self.input_path = input_path
+        
         self.is_video = False
         self.overlap_thresh = overlap_thresh
         
